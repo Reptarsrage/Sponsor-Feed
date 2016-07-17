@@ -23,26 +23,75 @@ namespace SubscriberFeed
         private Queue<string> notifications;
         private bool shown;
 
+        private const int timerInterval = 100;
+
+        private int showForMSecs = 2000;
+        private int fadeDuration = 250;
+        private int fadesteps = 100;
+        private int timeBetweenAlerts = 500;
+        private bool allowFade = true;
+
+        protected override bool ShowWithoutActivation
+        {
+            get { return true; }
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams baseParams = base.CreateParams;
+
+                const int WS_EX_NOACTIVATE = 0x08000000;
+                const int WS_EX_TOOLWINDOW = 0x00000080;
+                baseParams.ExStyle |= (int)(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
+
+                return baseParams;
+            }
+        }
+
         public NotificationForm()
         {
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.None;
-            this.timer1.Interval = 10000;
+            
             notifications = new Queue<string>();
             shown = false;
             this.BackColor = Color.Black;
-            this.TransparencyKey = Color.Black;
+            //this.TransparencyKey = Color.Black;
             this.textBox1.Text = "";
             this.textBox1.ForeColor = Color.Magenta;
             this.textBox1.WordWrap = true;
             this.textBox1.Enabled = false;
             this.TopMost = true;
             this.Show();
+            this.timer1.Interval = timerInterval;
+            this.timer1.Start();
         }
 
         private void fade(bool fadein) {
-            int duration = 500;//in milliseconds
-            int steps = 100;
+            if (!allowFade)
+            {
+                if (fadein)
+                {
+                    this.shown = true;
+                    Opacity = 1.00;
+                    this.timer1.Interval = showForMSecs; // time shown
+                    this.timer1.Start();
+                }
+                else
+                {
+                    this.shown = false;
+                    Opacity = 0.00;
+                    this.timer1.Interval = timeBetweenAlerts; // time between
+                    this.timer1.Start();
+                }
+                return;
+            }
+
+
+            int duration = fadeDuration;//in milliseconds
+            int steps = fadesteps;
             Timer timer = new Timer();
             timer.Interval = duration / steps;
 
@@ -63,12 +112,12 @@ namespace SubscriberFeed
                     if (fadein)
                     {
                         this.shown = true;
-                        this.timer1.Interval = 10000;
+                        this.timer1.Interval = showForMSecs; // time shown
                         this.timer1.Start();
                     }
                     else {
                         this.shown = false;
-                        this.timer1.Interval = 1000;
+                        this.timer1.Interval = timeBetweenAlerts; // time between
                         this.timer1.Start();
                     }
 
@@ -83,10 +132,6 @@ namespace SubscriberFeed
         public void EnqueueNotification(string msg)
         {
             this.notifications.Enqueue(msg);
-            if (!shown && !timer1.Enabled)
-            {
-                fade(true);
-            }
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -96,10 +141,16 @@ namespace SubscriberFeed
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            this.TopMost = true;
-            this.timer1.Stop();
+            if (!this.shown && this.notifications.Count == 0)
+            {
+                this.timer1.Interval = timerInterval;
+                return; // wait
+            }
+
+                this.timer1.Stop();
             if (!this.shown && this.notifications.Count > 0)
             {
+
                 this.textBox1.Clear();
                 this.textBox1.Text = this.notifications.Dequeue();
                 fade(true);

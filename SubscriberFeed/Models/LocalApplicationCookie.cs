@@ -22,6 +22,9 @@ namespace SubscriberFeed
         [XmlArray("Subscribers")]
         public List<SubscriberSnippet> Subscribers { get; set; }
 
+        [XmlArray("Sponsors")]
+        public List<SponsorSnippet> Sponsors { get; set; }
+
         [XmlElement("Code")]
         public string Code { get; set; }
 

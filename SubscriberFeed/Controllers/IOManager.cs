@@ -24,7 +24,18 @@ namespace SubscriberFeed
             }
         }
 
-        public bool LoadLocalCookie(ref Dictionary<string, SubscriberSnippet> subscribers)
+        public bool DeleteLocalCookie()
+        {
+            string path = Path.Combine(Path.GetTempPath(), global::SubscriberFeed.Properties.Settings.Default.LocalCookie);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+            return false;
+        }
+
+        public bool LoadLocalCookie(ref Dictionary<string, SubscriberSnippet> subscribers, ref Dictionary<string, SponsorSnippet> sponsors)
         {
             string path = Path.Combine(Path.GetTempPath(), global::SubscriberFeed.Properties.Settings.Default.LocalCookie);
             if (File.Exists(path))
@@ -41,6 +52,10 @@ namespace SubscriberFeed
                     foreach (SubscriberSnippet s in cookie.Subscribers)
                     {
                         if (subscribers.ContainsKey(s.ChannelId)) subscribers.Add(s.ChannelId, s);
+                    }
+                    foreach (SponsorSnippet s in cookie.Sponsors)
+                    {
+                        if (sponsors.ContainsKey(s.ChannelId)) sponsors.Add(s.ChannelId, s);
                     }
 
                     log("Loaded local file, renewing credentials.");
@@ -63,7 +78,7 @@ namespace SubscriberFeed
             return false;
         }
 
-        public bool SaveLocalCookie(ref Dictionary<string, SubscriberSnippet> subscribers)
+        public bool SaveLocalCookie(ref Dictionary<string, SubscriberSnippet> subscribers, ref Dictionary<string, SponsorSnippet> sponsors)
         {
             try
             {
@@ -72,6 +87,11 @@ namespace SubscriberFeed
                 foreach (SubscriberSnippet s in subscribers.Values)
                 {
                     cookie.Subscribers.Add(s);
+                }
+                cookie.Sponsors = new List<SponsorSnippet>();
+                foreach (SponsorSnippet s in sponsors.Values)
+                {
+                    cookie.Sponsors.Add(s);
                 }
                 cookie.Count = subscribers.Values.Count;
                 cookie.Code = global::SubscriberFeed.Properties.Settings.Default.Code;

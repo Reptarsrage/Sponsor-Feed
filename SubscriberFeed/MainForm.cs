@@ -73,7 +73,7 @@ namespace SubscriberFeed
         {
             if (bootstrapped)
             {
-                IOManager.Instance.SaveLocalCookie(ref this.Subscribers);
+                IOManager.Instance.SaveLocalCookie(ref this.Subscribers, ref this.Sponsors);
                 base.OnClosing(e);
             }
         }
@@ -89,7 +89,7 @@ namespace SubscriberFeed
             }
 
 
-            if (IOManager.Instance.LoadLocalCookie(ref this.Subscribers))
+            if (IOManager.Instance.LoadLocalCookie(ref this.Subscribers, ref this.Sponsors))
             {
                 log("Loaded from local storage.");
                 this.StopButton.Enabled = true;
@@ -231,6 +231,16 @@ namespace SubscriberFeed
                 this.StopButton.Enabled = false;
                 return;
             }
+        }
+
+        private void DeleteLocalButton_Click(object sender, EventArgs e)
+        {
+            IOManager.Instance.DeleteLocalCookie();
+        }
+
+        private void TestButton_Click(object sender, EventArgs e)
+        {
+            this.showNotification("Test!");
         }
     }
 }
